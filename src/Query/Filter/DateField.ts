@@ -47,21 +47,21 @@ export abstract class DateField extends Field {
                     result.filter = (task: Task) => {
                         const date = this.date(task);
                         return date
-                            ? date.isBefore(filterDate)
+                            ? date.isBefore(filterDate, 'day')
                             : this.filterResultIfFieldMissing();
                     };
                 } else if (match[1] === 'after') {
                     result.filter = (task: Task) => {
                         const date = this.date(task);
                         return date
-                            ? date.isAfter(filterDate)
+                            ? date.isAfter(filterDate, 'day')
                             : this.filterResultIfFieldMissing();
                     };
                 } else {
                     result.filter = (task: Task) => {
                         const date = this.date(task);
                         return date
-                            ? date.isSame(filterDate)
+                            ? date.isSame(filterDate, 'day')
                             : this.filterResultIfFieldMissing();
                     };
                 }

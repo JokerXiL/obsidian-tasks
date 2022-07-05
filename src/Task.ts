@@ -81,7 +81,7 @@ export class Task {
     /** The blockLink is a "^" annotation after the dates/recurrence rules. */
     public readonly blockLink: string;
 
-    public static readonly dateFormat = 'YYYY-MM-DD';
+    public static readonly dateFormat = 'YYYY-MM-DD HH:mm:ss';
 
     // Main regex for parsing a line. It matches the following:
     // - Indentation
@@ -95,10 +95,14 @@ export class Task {
     // The following regex's end with `$` because they will be matched and
     // removed from the end until none are left.
     public static readonly priorityRegex = /([⏫🔼🔽])$/u;
-    public static readonly startDateRegex = /🛫 ?(\d{4}-\d{2}-\d{2})$/u;
-    public static readonly scheduledDateRegex = /[⏳⌛] ?(\d{4}-\d{2}-\d{2})$/u;
-    public static readonly dueDateRegex = /[📅📆🗓] ?(\d{4}-\d{2}-\d{2})$/u;
-    public static readonly doneDateRegex = /✅ ?(\d{4}-\d{2}-\d{2})$/u;
+    public static readonly startDateRegex =
+        /🛫 ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+    public static readonly scheduledDateRegex =
+        /[⏳⌛] ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+    public static readonly dueDateRegex =
+        /[📅📆🗓] ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+    public static readonly doneDateRegex =
+        /✅ ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
     public static readonly recurrenceRegex = /🔁 ?([a-zA-Z0-9, !]+)$/iu;
 
     // Regex to match all hash tags, basically hash followed by anything but the characters in the negation.

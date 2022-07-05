@@ -49,19 +49,19 @@ export class HappensDateField extends Field {
                 if (happensMatch[1] === 'before') {
                     result.filter = (task: Task) => {
                         return this.dates(task).some(
-                            (date) => date && date.isBefore(filterDate),
+                            (date) => date && date.isBefore(filterDate, 'day'),
                         );
                     };
                 } else if (happensMatch[1] === 'after') {
                     result.filter = (task: Task) => {
                         return this.dates(task).some(
-                            (date) => date && date.isAfter(filterDate),
+                            (date) => date && date.isAfter(filterDate, 'day'),
                         );
                     };
                 } else {
                     result.filter = (task: Task) => {
                         return this.dates(task).some(
-                            (date) => date && date.isSame(filterDate),
+                            (date) => date && date.isSame(filterDate, 'day'),
                         );
                     };
                 }

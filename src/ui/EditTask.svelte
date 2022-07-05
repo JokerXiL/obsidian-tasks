@@ -53,7 +53,7 @@
             forwardDate: forwardDate != undefined,
         });
         if (parsed !== null) {
-            return window.moment(parsed).format('YYYY-MM-DD');
+            return window.moment(parsed).format('YYYY-MM-DD HH:mm:ss');
         }
         return `<i>invalid ${type} date</i>`;
     }
@@ -122,13 +122,13 @@
             priority,
             recurrenceRule: task.recurrence ? task.recurrence.toText() : '',
             startDate: task.startDate
-                ? task.startDate.format('YYYY-MM-DD')
+                ? task.startDate.format('YYYY-MM-DD HH:mm:ss')
                 : '',
             scheduledDate: task.scheduledDate
-                ? task.scheduledDate.format('YYYY-MM-DD')
+                ? task.scheduledDate.format('YYYY-MM-DD HH:mm:ss')
                 : '',
-            dueDate: task.dueDate ? task.dueDate.format('YYYY-MM-DD') : '',
-            doneDate: task.doneDate ? task.doneDate.format('YYYY-MM-DD') : '',
+            dueDate: task.dueDate ? task.dueDate.format('YYYY-MM-DD HH:mm:ss') : '',
+            doneDate: task.doneDate ? task.doneDate.format('YYYY-MM-DD HH:mm:ss') : '',
         };
         setTimeout(() => {
             descriptionInput.focus();
@@ -207,9 +207,9 @@
             scheduledDate,
             dueDate,
             doneDate: window
-                .moment(editableTask.doneDate, 'YYYY-MM-DD')
+                .moment(editableTask.doneDate, 'YYYY-MM-DD HH:mm:ss')
                 .isValid()
-                ? window.moment(editableTask.doneDate, 'YYYY-MM-DD')
+                ? window.moment(editableTask.doneDate, 'YYYY-MM-DD HH:mm:ss')
                 : null,
         });
 

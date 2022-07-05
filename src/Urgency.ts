@@ -31,13 +31,13 @@ export class Urgency {
         }
 
         if (task.scheduledDate !== null) {
-            if (window.moment().isSameOrAfter(task.scheduledDate)) {
+            if (window.moment().isSameOrAfter(task.scheduledDate, 'day')) {
                 urgency += 1 * Urgency.scheduledCoefficient;
             }
         }
 
         if (task.startDate !== null) {
-            if (window.moment().isBefore(task.startDate)) {
+            if (window.moment().isBefore(task.startDate, 'day')) {
                 urgency += 1 * Urgency.startedCoefficient;
             }
         }
