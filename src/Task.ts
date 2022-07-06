@@ -77,11 +77,18 @@ export class Task {
     public readonly dueDate: Moment | null;
     public readonly doneDate: Moment | null;
 
+    public readonly isStartDateTime: boolean;
+    public readonly isScheduledDateTime: boolean;
+    public readonly isDueDateTime: boolean;
+    public readonly isDoneDateTime: boolean;
+
     public readonly recurrence: Recurrence | null;
     /** The blockLink is a "^" annotation after the dates/recurrence rules. */
     public readonly blockLink: string;
 
-    public static readonly dateFormat = 'YYYY-MM-DD HH:mm:ss';
+    public static readonly dateFormat = 'YYYY-MM-DD';
+
+    public static readonly dateTimeFormat = 'YYYY-MM-DD HH:mm:ss';
 
     // Main regex for parsing a line. It matches the following:
     // - Indentation
@@ -96,13 +103,13 @@ export class Task {
     // removed from the end until none are left.
     public static readonly priorityRegex = /([⏫🔼🔽])$/u;
     public static readonly startDateRegex =
-        /🛫 ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+        /🛫 ?(\d{4}-\d{2}-\d{2} ?(\d{2}:\d{2}:\d{2})?)$/u;
     public static readonly scheduledDateRegex =
-        /[⏳⌛] ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+        /[⏳⌛] ?(\d{4}-\d{2}-\d{2} ?(\d{2}:\d{2}:\d{2})?)$/u;
     public static readonly dueDateRegex =
-        /[📅📆🗓] ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+        /[📅📆🗓] ?(\d{4}-\d{2}-\d{2} ?(\d{2}:\d{2}:\d{2})?)$/u;
     public static readonly doneDateRegex =
-        /✅ ?(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})$/u;
+        /✅ ?(\d{4}-\d{2}-\d{2} ?(\d{2}:\d{2}:\d{2})?)$/u;
     public static readonly recurrenceRegex = /🔁 ?([a-zA-Z0-9, !]+)$/iu;
 
     // Regex to match all hash tags, basically hash followed by anything but the characters in the negation.
@@ -133,6 +140,10 @@ export class Task {
         scheduledDate,
         dueDate,
         doneDate,
+        isStartDateTime,
+        isScheduledDateTime,
+        isDueDateTime,
+        isDoneDateTime,
         recurrence,
         blockLink,
         tags,
@@ -150,6 +161,10 @@ export class Task {
         scheduledDate: moment.Moment | null;
         dueDate: moment.Moment | null;
         doneDate: moment.Moment | null;
+        isStartDateTime: boolean;
+        isScheduledDateTime: boolean;
+        isDueDateTime: boolean;
+        isDoneDateTime: boolean;
         recurrence: Recurrence | null;
         blockLink: string;
         tags: string[] | [];
@@ -171,6 +186,11 @@ export class Task {
         this.scheduledDate = scheduledDate;
         this.dueDate = dueDate;
         this.doneDate = doneDate;
+
+        this.isStartDateTime = isStartDateTime;
+        this.isScheduledDateTime = isScheduledDateTime;
+        this.isDueDateTime = isDueDateTime;
+        this.isDoneDateTime = isDoneDateTime;
 
         this.recurrence = recurrence;
         this.blockLink = blockLink;
@@ -245,10 +265,17 @@ export class Task {
         // strings are in the expected order after the description.
         let matched: boolean;
         let priority: Priority = Priority.None;
+
         let startDate: Moment | null = null;
         let scheduledDate: Moment | null = null;
         let dueDate: Moment | null = null;
         let doneDate: Moment | null = null;
+
+        let isStartDateTime: boolean = false;
+        let isScheduledDateTime: boolean = false;
+        let isDueDateTime: boolean = false;
+        let isDoneDateTime: boolean = true;
+
         let recurrenceRule: string = '';
         let recurrence: Recurrence | null = null;
         let tags: any = [];
@@ -284,7 +311,10 @@ export class Task {
 
             const doneDateMatch = description.match(Task.doneDateRegex);
             if (doneDateMatch !== null) {
-                doneDate = window.moment(doneDateMatch[1], Task.dateFormat);
+                if (doneDateMatch[2]) {
+                    isDoneDateTime = true;
+                }
+                doneDate = window.moment(doneDateMatch[1], Task.dateTimeFormat);
                 description = description
                     .replace(Task.doneDateRegex, '')
                     .trim();
@@ -293,7 +323,10 @@ export class Task {
 
             const dueDateMatch = description.match(Task.dueDateRegex);
             if (dueDateMatch !== null) {
-                dueDate = window.moment(dueDateMatch[1], Task.dateFormat);
+                if (dueDateMatch[2]) {
+                    isDueDateTime = true;
+                }
+                dueDate = window.moment(dueDateMatch[1], Task.dateTimeFormat);
                 description = description.replace(Task.dueDateRegex, '').trim();
                 matched = true;
             }
@@ -302,9 +335,12 @@ export class Task {
                 Task.scheduledDateRegex,
             );
             if (scheduledDateMatch !== null) {
+                if (scheduledDateMatch[2]) {
+                    isScheduledDateTime = true;
+                }
                 scheduledDate = window.moment(
                     scheduledDateMatch[1],
-                    Task.dateFormat,
+                    Task.dateTimeFormat,
                 );
                 description = description
                     .replace(Task.scheduledDateRegex, '')
@@ -314,7 +350,13 @@ export class Task {
 
             const startDateMatch = description.match(Task.startDateRegex);
             if (startDateMatch !== null) {
-                startDate = window.moment(startDateMatch[1], Task.dateFormat);
+                if (startDateMatch[2]) {
+                    isStartDateTime = true;
+                }
+                startDate = window.moment(
+                    startDateMatch[1],
+                    Task.dateTimeFormat,
+                );
                 description = description
                     .replace(Task.startDateRegex, '')
                     .trim();
@@ -393,6 +435,10 @@ export class Task {
             scheduledDate,
             dueDate,
             doneDate,
+            isStartDateTime,
+            isScheduledDateTime,
+            isDoneDateTime,
+            isDueDateTime,
             recurrence,
             blockLink,
             tags,
@@ -531,7 +577,9 @@ export class Task {
             const startDate: string = layoutOptions.shortMode
                 ? ' ' + startDateSymbol
                 : ` ${startDateSymbol} ${this.startDate.format(
-                      Task.dateFormat,
+                      this.isStartDateTime
+                          ? Task.dateTimeFormat
+                          : Task.dateFormat,
                   )}`;
             taskString += startDate;
         }
@@ -540,7 +588,9 @@ export class Task {
             const scheduledDate: string = layoutOptions.shortMode
                 ? ' ' + scheduledDateSymbol
                 : ` ${scheduledDateSymbol} ${this.scheduledDate.format(
-                      Task.dateFormat,
+                      this.isScheduledDateTime
+                          ? Task.dateTimeFormat
+                          : Task.dateFormat,
                   )}`;
             taskString += scheduledDate;
         }
@@ -548,14 +598,22 @@ export class Task {
         if (!layoutOptions.hideDueDate && this.dueDate) {
             const dueDate: string = layoutOptions.shortMode
                 ? ' ' + dueDateSymbol
-                : ` ${dueDateSymbol} ${this.dueDate.format(Task.dateFormat)}`;
+                : ` ${dueDateSymbol} ${this.dueDate.format(
+                      this.isDueDateTime
+                          ? Task.dateTimeFormat
+                          : Task.dateFormat,
+                  )}`;
             taskString += dueDate;
         }
 
         if (!layoutOptions.hideDoneDate && this.doneDate) {
             const doneDate: string = layoutOptions.shortMode
                 ? ' ' + doneDateSymbol
-                : ` ${doneDateSymbol} ${this.doneDate.format(Task.dateFormat)}`;
+                : ` ${doneDateSymbol} ${this.doneDate.format(
+                      this.isDoneDateTime
+                          ? Task.dateTimeFormat
+                          : Task.dateFormat,
+                  )}`;
             taskString += doneDate;
         }
 
@@ -712,6 +770,7 @@ export class Task {
                     Task.toTooltipDate({
                         signifier: startDateSymbol,
                         date: this.startDate,
+                        isDateTime: this.isStartDateTime,
                     }),
                 );
             }
@@ -722,6 +781,7 @@ export class Task {
                     Task.toTooltipDate({
                         signifier: scheduledDateSymbol,
                         date: this.scheduledDate,
+                        isDateTime: this.isScheduledDateTime,
                     }),
                 );
             }
@@ -732,6 +792,7 @@ export class Task {
                     Task.toTooltipDate({
                         signifier: dueDateSymbol,
                         date: this.dueDate,
+                        isDateTime: this.isDueDateTime,
                     }),
                 );
             }
@@ -742,6 +803,7 @@ export class Task {
                     Task.toTooltipDate({
                         signifier: doneDateSymbol,
                         date: this.doneDate,
+                        isDateTime: this.isDoneDateTime,
                     }),
                 );
             }
@@ -761,9 +823,11 @@ export class Task {
     private static toTooltipDate({
         signifier,
         date,
+        isDateTime,
     }: {
         signifier: string;
         date: Moment;
+        isDateTime: boolean;
     }): string {
         return `${signifier} ${date.format(Task.dateFormat)} (${date.from(
             window.moment().startOf('day'),

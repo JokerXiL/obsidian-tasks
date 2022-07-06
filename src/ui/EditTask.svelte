@@ -49,11 +49,11 @@
         if (!date) {
             return `<i>no ${type} date</i>`;
         }
-        const parsed = chrono.parseDate(date, forwardDate, {
+        const parsed = chrono.parse(date, forwardDate, {
             forwardDate: forwardDate != undefined,
         });
         if (parsed !== null) {
-            return window.moment(parsed).format('YYYY-MM-DD HH:mm:ss');
+            return window.moment(parsed[0].start.date()).format(parsed[0].start.isCertain('hour') ? Task.dateTimeFormat : Task.dateFormat);
         }
         return `<i>invalid ${type} date</i>`;
     }
@@ -122,13 +122,17 @@
             priority,
             recurrenceRule: task.recurrence ? task.recurrence.toText() : '',
             startDate: task.startDate
-                ? task.startDate.format('YYYY-MM-DD HH:mm:ss')
+                ? (task.isStartDateTime ? task.startDate.format(Task.dateTimeFormat) : task.startDate.format(Task.dateFormat))
                 : '',
             scheduledDate: task.scheduledDate
-                ? task.scheduledDate.format('YYYY-MM-DD HH:mm:ss')
+                ? (task.isScheduledDateTime ? task.scheduledDate.format(Task.dateTimeFormat) : task.scheduledDate.format(Task.dateFormat))
                 : '',
-            dueDate: task.dueDate ? task.dueDate.format('YYYY-MM-DD HH:mm:ss') : '',
-            doneDate: task.doneDate ? task.doneDate.format('YYYY-MM-DD HH:mm:ss') : '',
+            dueDate: task.dueDate
+                ? (task.isDueDateTime ? task.dueDate.format(Task.dateTimeFormat) : task.dueDate.format(Task.dateFormat))
+                : '',
+            doneDate: task.doneDate
+                ? (task.isDoneDateTime ? task.doneDate.format(Task.dateTimeFormat) : task.doneDate.format(Task.dateFormat))
+                : '',
         };
         setTimeout(() => {
             descriptionInput.focus();
@@ -143,33 +147,39 @@
         }
 
         let startDate: moment.Moment | null = null;
-        const parsedStartDate = chrono.parseDate(
+        let isStartDateTime: boolean = false;
+        const parsedStartDate = chrono.parse(
             editableTask.startDate,
             new Date(),
             { forwardDate: true },
         );
         if (parsedStartDate !== null) {
-            startDate = window.moment(parsedStartDate);
+            isStartDateTime = parsedStartDate[0].start.isCertain('hour');
+            startDate = window.moment(parsedStartDate[0].start.date());
         }
 
         let scheduledDate: moment.Moment | null = null;
-        const parsedScheduledDate = chrono.parseDate(
+        let isScheduledDateTime: boolean = false;
+        const parsedScheduledDate = chrono.parse(
             editableTask.scheduledDate,
             new Date(),
             { forwardDate: true },
         );
         if (parsedScheduledDate !== null) {
-            scheduledDate = window.moment(parsedScheduledDate);
+            isScheduledDateTime = parsedScheduledDate[0].start.isCertain('hour');
+            scheduledDate = window.moment(parsedScheduledDate[0].start.date());
         }
 
         let dueDate: moment.Moment | null = null;
-        const parsedDueDate = chrono.parseDate(
+        let isDueDateTime: boolean = false;
+        const parsedDueDate = chrono.parse(
             editableTask.dueDate,
             new Date(),
             { forwardDate: true },
         );
         if (parsedDueDate !== null) {
-            dueDate = window.moment(parsedDueDate);
+            isDueDateTime = parsedDueDate[0].start.isCertain('hour');
+            dueDate = window.moment(parsedDueDate[0].start.date());
         }
 
         let recurrence: Recurrence | null = null;
@@ -207,10 +217,13 @@
             scheduledDate,
             dueDate,
             doneDate: window
-                .moment(editableTask.doneDate, 'YYYY-MM-DD HH:mm:ss')
+                .moment(editableTask.doneDate, task.isDoneDateTime ? Task.dateTimeFormat : Task.dateFormat)
                 .isValid()
-                ? window.moment(editableTask.doneDate, 'YYYY-MM-DD HH:mm:ss')
+                ? window.moment(editableTask.doneDate, task.isDoneDateTime ? Task.dateTimeFormat : Task.dateFormat)
                 : null,
+            isStartDateTime,
+            isScheduledDateTime,
+            isDueDateTime,
         });
 
         onSubmit([updatedTask]);
