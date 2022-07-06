@@ -52,7 +52,7 @@
         const parsed = chrono.parse(date, forwardDate, {
             forwardDate: forwardDate != undefined,
         });
-        if (parsed !== null) {
+        if (parsed.length !== 0) {
             return window.moment(parsed[0].start.date()).format(parsed[0].start.isCertain('hour') ? Task.dateTimeFormat : Task.dateFormat);
         }
         return `<i>invalid ${type} date</i>`;
@@ -153,7 +153,7 @@
             new Date(),
             { forwardDate: true },
         );
-        if (parsedStartDate !== null) {
+        if (parsedStartDate.length !== 0) {
             isStartDateTime = parsedStartDate[0].start.isCertain('hour');
             startDate = window.moment(parsedStartDate[0].start.date());
         }
@@ -165,7 +165,7 @@
             new Date(),
             { forwardDate: true },
         );
-        if (parsedScheduledDate !== null) {
+        if (parsedScheduledDate.length !== 0) {
             isScheduledDateTime = parsedScheduledDate[0].start.isCertain('hour');
             scheduledDate = window.moment(parsedScheduledDate[0].start.date());
         }
@@ -177,7 +177,7 @@
             new Date(),
             { forwardDate: true },
         );
-        if (parsedDueDate !== null) {
+        if (parsedDueDate.length !== 0) {
             isDueDateTime = parsedDueDate[0].start.isCertain('hour');
             dueDate = window.moment(parsedDueDate[0].start.date());
         }
