@@ -14,7 +14,11 @@ import { Urgency } from './Urgency';
  */
 export enum Status {
     Todo = 'Todo',
+    Incomplete = 'Incomplete',
     Done = 'Done',
+    Canceled = 'Canceled',
+    Forwarded = 'Forwarded',
+    Scheduling = 'Scheduling',
 }
 
 /**
@@ -244,11 +248,33 @@ export class Task {
         const statusString = regexMatch[2].toLowerCase();
         let status: Status;
         switch (statusString) {
-            case ' ':
+            case ' ': {
                 status = Status.Todo;
                 break;
+            }
+            case '/': {
+                status = Status.Incomplete;
+                break;
+            }
+            case 'x': {
+                status = Status.Done;
+                break;
+            }
+            case '-': {
+                status = Status.Canceled;
+                break;
+            }
+            case '>': {
+                status = Status.Forwarded;
+                break;
+            }
+            case '<': {
+                status = Status.Scheduling;
+                break;
+            }
             default:
                 status = Status.Done;
+                break;
         }
 
         // Match for block link and remove if found. Always expected to be
@@ -520,7 +546,7 @@ export class Task {
 
             // Should be re-rendered as enabled after update in file.
             checkbox.disabled = true;
-            const toggledTasks = this.toggle();
+            const toggledTasks = this.toggle(event.button);
             replaceTaskWithTasks({
                 originalTask: this,
                 newTasks: toggledTasks,
@@ -643,10 +669,68 @@ export class Task {
      * together with the next occurrence in the order `[next, toggled]`. If the
      * task is not recurring, it will return `[toggled]`.
      */
-    public toggle(): Task[] {
-        const newStatus: Status =
-            this.status === Status.Todo ? Status.Done : Status.Todo;
-
+    public toggle(button: number = 1): Task[] {
+        let newStatus: Status;
+        //0 left click
+        //1 middle click (not present)
+        //2 right click
+        //4 forward
+        //3 back
+        if (button === 0) {
+            switch (this.status) {
+                case Status.Todo: {
+                    newStatus = Status.Done;
+                    break;
+                }
+                case Status.Incomplete: {
+                    newStatus = Status.Todo;
+                    break;
+                }
+                case Status.Done: {
+                    newStatus = Status.Todo;
+                    break;
+                }
+                case Status.Canceled: {
+                    newStatus = Status.Todo;
+                    break;
+                }
+                case Status.Forwarded: {
+                    newStatus = Status.Todo;
+                    break;
+                }
+                case Status.Scheduling: {
+                    newStatus = Status.Todo;
+                    break;
+                }
+            }
+        } else {
+            switch (this.status) {
+                case Status.Todo: {
+                    newStatus = Status.Canceled;
+                    break;
+                }
+                case Status.Incomplete: {
+                    newStatus = Status.Forwarded;
+                    break;
+                }
+                case Status.Done: {
+                    newStatus = Status.Canceled;
+                    break;
+                }
+                case Status.Canceled: {
+                    newStatus = Status.Incomplete;
+                    break;
+                }
+                case Status.Forwarded: {
+                    newStatus = Status.Scheduling;
+                    break;
+                }
+                case Status.Scheduling: {
+                    newStatus = Status.Done;
+                    break;
+                }
+            }
+        }
         let newDoneDate = null;
 
         let nextOccurrence: {
@@ -655,16 +739,42 @@ export class Task {
             dueDate: Moment | null;
         } | null = null;
 
-        if (newStatus !== Status.Todo) {
-            // Set done date only if setting value is true
-            const { setDoneDate } = getSettings();
-            if (setDoneDate) {
-                newDoneDate = window.moment();
-            }
+        // Set done date only if setting value is true
+        const { setDoneDate } = getSettings();
+        if (newStatus === Status.Done && setDoneDate) {
+            newDoneDate = window.moment();
+        }
 
-            // If this task is no longer todo, we need to check if it is recurring:
-            if (this.recurrence !== null) {
-                nextOccurrence = this.recurrence.next();
+        // If this task is no longer todo, we need to check if it is recurring:
+        if (this.status === Status.Todo && this.recurrence !== null) {
+            nextOccurrence = this.recurrence.next();
+        }
+
+        let newStatusCharacter;
+        switch (newStatus) {
+            case Status.Todo: {
+                newStatusCharacter = ' ';
+                break;
+            }
+            case Status.Incomplete: {
+                newStatusCharacter = '/';
+                break;
+            }
+            case Status.Done: {
+                newStatusCharacter = 'x';
+                break;
+            }
+            case Status.Canceled: {
+                newStatusCharacter = '-';
+                break;
+            }
+            case Status.Forwarded: {
+                newStatusCharacter = '>';
+                break;
+            }
+            case Status.Scheduling: {
+                newStatusCharacter = '<';
+                break;
             }
         }
 
@@ -672,7 +782,7 @@ export class Task {
             ...this,
             status: newStatus,
             doneDate: newDoneDate,
-            originalStatusCharacter: newStatus === Status.Done ? 'x' : ' ',
+            originalStatusCharacter: newStatusCharacter,
         });
 
         const newTasks: Task[] = [];

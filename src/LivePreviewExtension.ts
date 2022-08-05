@@ -55,7 +55,7 @@ class LivePreviewExtension implements PluginValue {
         event.preventDefault();
 
         // Clicked on a task's checkbox. Toggle the task and set it.
-        const toggled = task.toggle();
+        const toggled = task.toggle(event.button);
         const toggledString = toggled
             .map((task) => task.toFileLineString())
             .join(state.lineBreak);
